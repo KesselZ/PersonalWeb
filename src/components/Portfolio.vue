@@ -17,7 +17,13 @@
         <TransitionGroup name="list" tag="div" class="portfolio-grid-inner">
           <div v-for="item in filteredItems" :key="item.id" class="portfolio-item">
             <div class="portfolio-image">
-              <img :src="'/api/image?path=' + item.image + '&w=400'" :alt="item.name" loading="lazy" />
+              <!-- 智能图片加载：优先加载缩略图，失败则回退原图 -->
+              <img 
+                :src="getOptimizedImage(item.image)" 
+                :alt="item.name" 
+                @error="handleImageError($event, item.image)"
+                loading="lazy" 
+              />
               <!-- 标签移动到图片右下角 -->
               <span class="portfolio-tag" :class="getTagClass(item.category)">{{ item.category }}</span>
               <div class="portfolio-overlay">
@@ -76,6 +82,15 @@ export default {
     }
   },
   methods: {
+    getOptimizedImage(originalPath) {
+      // 逻辑：将 static/images/xxx/abc.png 转换为 static/images/thumbnails/abc.webp
+      const fileName = originalPath.split('/').pop().split('.')[0];
+      return `/static/images/thumbnails/${fileName}.webp`;
+    },
+    handleImageError(event, originalPath) {
+      // 如果缩略图加载失败（还没生成），回退到原图
+      event.target.src = '/' + originalPath;
+    },
     isArt(item) {
       const artLabel = this.currentLang === 'zh' ? '艺术' : 'Art';
       return item.category === artLabel;

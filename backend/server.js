@@ -8,13 +8,25 @@ try { sharp = require('sharp'); } catch (e) { console.warn('Sharp not found'); }
 let puppeteer;
 try { puppeteer = require('puppeteer'); } catch (e) { console.warn('Puppeteer not found'); }
 
-const data = require('./data');
+// 核心修改：使用异步方式加载 ESM 格式的 data.js
+let data;
+(async () => {
+  const dataModule = await import('./data.js');
+  data = dataModule;
+})();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use('/static', express.static(path.join(__dirname, '../static')));
+
+// 静态文件服务：在生产环境下服务构建好的 Vue 前端
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+}
 
 // 自动截图函数
 async function takeScreenshot(url, savePath) {
@@ -89,5 +101,15 @@ app.get('/api/education', (req, res) => res.json(data.education));
 app.get('/api/skills', (req, res) => res.json(data.skills));
 app.get('/api/portfolio', (req, res) => res.json(data.portfolio));
 app.get('/api/artworks', (req, res) => res.json(data.artworks));
+
+// SPA 路由回退：确保刷新页面时不会 404
+app.get('*', (req, res) => {
+  const indexPath = path.join(__dirname, '../dist/index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('API endpoint not found (or build not found)');
+  }
+});
 
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));

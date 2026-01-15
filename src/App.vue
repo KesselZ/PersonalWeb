@@ -71,7 +71,6 @@
 </template>
 
 <script>
-import axios from 'axios';
 import Navbar from './components/Navbar.vue';
 import Hero from './components/Hero.vue';
 import About from './components/About.vue';
@@ -79,6 +78,9 @@ import Education from './components/Education.vue';
 import Skills from './components/Skills.vue';
 import Portfolio from './components/Portfolio.vue';
 import Footer from './components/Footer.vue';
+
+// 核心重构：直接导入本地数据，不再请求 API
+import * as siteData from '../backend/data.js';
 
 export default {
   components: { Navbar, Hero, About, Education, Skills, Portfolio, Footer },
@@ -89,11 +91,12 @@ export default {
       isLoading: true,
       loadingProgress: 0,
       loadingText: '',
-      personalInfo: {},
-      education: [],
-      skills: [],
-      portfolio: [],
-      artworks: [],
+      // 初始化时直接赋值
+      personalInfo: { ...siteData.commonInfo, ...siteData.personalInfo, age: siteData.calculateAge() },
+      education: siteData.education,
+      skills: siteData.skills,
+      portfolio: siteData.portfolio,
+      artworks: siteData.artworks,
       showGallery: false,
       showLightbox: false,
       currentImageIndex: 0,
@@ -150,39 +153,27 @@ export default {
   },
   methods: {
     async loadData() {
-      if (this.personalInfo.zh) return;
-      
+      // 静态化重构：不再需要网络请求，直接模拟进度条
       this.isLoading = true;
       this.loadingProgress = 0;
       
-      // 使用 tKey 对应 translations.loading 中的键，符合 DRY 原则
-      const steps = [
-        { url: '/api/personal-info', key: 'personalInfo', tKey: 'info' },
-        { url: '/api/education', key: 'education', tKey: 'edu' },
-        { url: '/api/skills', key: 'skills', tKey: 'skills' },
-        { url: '/api/portfolio', key: 'portfolio', tKey: 'port' },
-        { url: '/api/artworks', key: 'artworks', tKey: 'gallery' }
-      ];
+      const steps = ['info', 'edu', 'skills', 'port', 'gallery'];
 
       try {
         for (let i = 0; i < steps.length; i++) {
-          const step = steps[i];
-          // 动态读取当前语言的加载文本
-          this.loadingText = this.t.loading[step.tKey];
-          const res = await axios.get(step.url);
-          this[step.key] = res.data;
+          this.loadingText = this.t.loading[steps[i]];
           this.loadingProgress = Math.round(((i + 1) / steps.length) * 80);
+          await new Promise(r => setTimeout(r, 100)); // 极短延迟模拟加载感
         }
 
         this.loadingText = this.t.loading.fonts;
         if (document.fonts) await document.fonts.ready;
         this.loadingProgress = 100;
       } catch (e) {
-        console.error('Initial load failed:', e);
+        console.error('Data sync failed:', e);
       } finally {
         setTimeout(() => { 
           this.isLoading = false; 
-          // 核心修复：确保首屏加载完成后强制回到顶部
           window.scrollTo(0, 0);
         }, 400);
       }

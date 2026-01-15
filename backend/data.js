@@ -171,7 +171,7 @@ const artworks = [
   { src: '/static/images/works/pic6.png', cover: '/static/images/works/pic6.png' }
 ];
 
-module.exports = {
+export {
   calculateAge,
   personalInfo,
   commonInfo,
