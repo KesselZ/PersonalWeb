@@ -8,7 +8,6 @@
     "server:dev": "nodemon backend/server.js",
     "sync": "node scripts/sync-assets.js",
     "build": "vite build",
-    "postinstall": "if [ \"$NODE_ENV\" = \"production\" ]; then echo 'Skipping puppeteer download in production...'; export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true; fi",
     "preview": "vite preview",
     "start": "node backend/server.js"
   },
