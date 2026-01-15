@@ -242,11 +242,9 @@ export default {
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 28px;
-    overflow: hidden;
-    box-shadow: 
-        0 10px 30px -10px rgba(79, 70, 229, 0.08),
-        0 20px 40px -20px rgba(0, 0, 0, 0.1);
+    /* 移除 overflow: hidden，允许 Tooltip 溢出显示 */
     transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
 }
 
 .portfolio-item:hover {
@@ -256,6 +254,13 @@ export default {
         0 40px 80px -15px rgba(99, 102, 241, 0.25),
         0 20px 40px -20px rgba(0, 0, 0, 0.2);
     border-color: rgba(99, 102, 241, 0.3); /* 悬浮时边框呈现主题色 */
+    z-index: 50; /* 确保悬浮的项及其 Tooltip 在最前面 */
+}
+
+.title-wrapper, .description-wrapper {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
 }
 
 .portfolio-image {
@@ -362,6 +367,8 @@ export default {
 .portfolio-content {
     padding: 0.5rem 1.8rem 2rem; /* 增加呼吸感 */
     transition: transform 0.4s ease;
+    position: relative;
+    z-index: 20; /* 确保内容区域（含 Tooltip）层级高于图片遮罩 */
 }
 
 .portfolio-item:hover .portfolio-content {
@@ -397,42 +404,43 @@ export default {
 /* Tooltip 基础样式 */
 .portfolio-tooltip {
     position: absolute;
-    bottom: 100%;
+    bottom: 100%; /* 回归上方弹出 */
     left: 50%;
     transform: translateX(-50%) translateY(10px);
-    background: rgba(15, 23, 42, 0.95);
+    background: rgba(15, 23, 42, 0.98); /* 增加不透明度 */
     color: white;
     padding: 0.8rem 1rem;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 0.8rem;
     line-height: 1.5;
     width: 260px;
-    z-index: 100;
+    z-index: 9999;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(8px);
+    transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); /* 增加弹性动画 */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
     text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .portfolio-tooltip::after {
     content: '';
     position: absolute;
-    top: 100%;
+    top: 100%; /* 箭头回归下方 */
     left: 50%;
     transform: translateX(-50%);
     border-width: 6px;
     border-style: solid;
-    border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+    border-color: rgba(15, 23, 42, 0.98) transparent transparent transparent;
 }
 
 /* 仅在具有 show-tooltip 类时显示（由 JS 控制） */
 .show-tooltip:hover .portfolio-tooltip {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(-12px);
+    transform: translateX(-50%) translateY(-20px); /* 增加向上弹出的距离，避免盖住按钮 */
 }
 
 @media (max-width: 992px) {
