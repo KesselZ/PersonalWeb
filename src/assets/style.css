@@ -1,0 +1,6 @@
+/* 这里的样式已经迁移到各个组件的 <style scoped> 中 */
+/* 只保留一些非常基础的全局定义 */
+:root {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+}

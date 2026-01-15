@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE - VS Code / Cursor
+.vscode/
+.history/
+*.log
+.cursor/
+
+# Local Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Puppeteer / Sharp cache (if any)
+.cache/
+package-lock.json (optional, but usually kept)
+
+# Project specific
+# 如果你不希望上传自动生成的截图，可以取消下面这一行的注释
+# static/images/captures/*.png
