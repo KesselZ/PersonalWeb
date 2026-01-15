@@ -46,7 +46,7 @@
         <div class="gallery-content">
           <div class="gallery-grid">
             <div v-for="(artwork, index) in artworks" :key="index" class="gallery-item" @click="openLightbox(index)">
-              <img :src="'/api/image?path=' + artwork.src + '&w=200'" :alt="'Artwork ' + (index + 1)" loading="lazy" />
+              <img :src="getArtThumb(artwork.src)" :alt="'Artwork ' + (index + 1)" loading="lazy" />
             </div>
           </div>
         </div>
@@ -153,29 +153,65 @@ export default {
   },
   methods: {
     async loadData() {
-      // 静态化重构：不再需要网络请求，直接模拟进度条
       this.isLoading = true;
       this.loadingProgress = 0;
-      
-      const steps = ['info', 'edu', 'skills', 'port', 'gallery'];
+
+      // 1. 搜集所有需要预加载的缩略图
+      const imageUrls = [
+        ...this.portfolio.map(p => this.getArtThumb(p.image)), // 作品集缩略图
+        ...this.artworks.map(a => this.getArtThumb(a.src))     // 画廊缩略图
+      ];
+
+      const total = imageUrls.length + 1; // +1 用于字体加载
+      let loaded = 0;
+
+      // 更新进度的闭包函数
+      const tick = () => {
+        loaded++;
+        this.loadingProgress = Math.round((loaded / total) * 100);
+      };
+
+      // 图片加载并强制解码 Promise 化
+      const preloadImage = (url) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = url;
+          img.onload = () => { 
+            // 核心优化：利用 decode API 确保图片被预先解码到内存中
+            if (img.decode) {
+              img.decode()
+                .then(() => { tick(); resolve(); })
+                .catch(() => { tick(); resolve(); });
+            } else {
+              tick(); resolve();
+            }
+          };
+          img.onerror = () => { tick(); resolve(); };
+        });
+      };
 
       try {
-        for (let i = 0; i < steps.length; i++) {
-          this.loadingText = this.t.loading[steps[i]];
-          this.loadingProgress = Math.round(((i + 1) / steps.length) * 80);
-          await new Promise(r => setTimeout(r, 100)); // 极短延迟模拟加载感
-        }
+        this.loadingText = this.currentLang === 'zh' ? '正在优化图片资源...' : 'Optimizing images...';
+        
+        // 并行预加载所有图片
+        await Promise.all(imageUrls.map(url => preloadImage(url)));
 
+        // 等待字体就绪
         this.loadingText = this.t.loading.fonts;
-        if (document.fonts) await document.fonts.ready;
-        this.loadingProgress = 100;
+        if (document.fonts) {
+          await document.fonts.ready;
+        }
+        tick();
+
       } catch (e) {
-        console.error('Data sync failed:', e);
+        console.error('Preload failed:', e);
       } finally {
+        this.loadingProgress = 100;
+        // 稍微停顿一下，让 100% 的状态能被看到，然后淡出
         setTimeout(() => { 
           this.isLoading = false; 
           window.scrollTo(0, 0);
-        }, 400);
+        }, 500);
       }
     },
     navigateToSection(section) {
@@ -200,6 +236,11 @@ export default {
     },
     nextImage() {
       this.currentImageIndex = (this.currentImageIndex + 1) % this.artworks.length;
+    },
+    getArtThumb(src) {
+      // 将 /static/images/works/pic1.png 转换为 /static/images/thumbnails/pic1.webp
+      const fileName = src.split('/').pop().split('.')[0];
+      return `/static/images/thumbnails/${fileName}.webp`;
     }
   }
 };
@@ -391,5 +432,252 @@ section h2::after {
   background: white; /* 在深色背景下使用白色进度条最醒目 */
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
   transition: width 0.4s ease;
+}
+/* 画廊模态框样式优化 - 极致玻璃拟态 */
+.gallery-modal {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.4); /* 极大幅度减弱遮罩，透出背景 */
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gallery-container {
+  background: rgba(255, 255, 255, 0.7); /* 玻璃材质 */
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  width: 100%;
+  max-width: 1100px;
+  max-height: 85vh;
+  border-radius: 32px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.2),
+    0 0 80px rgba(99, 102, 241, 0.1); /* 增加微弱的淡紫色外发光 */
+  animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.gallery-header {
+  padding: 2rem 2.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.gallery-header h3 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.gallery-close {
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-main);
+}
+
+.gallery-close:hover {
+  background: #ef4444;
+  color: white;
+  transform: rotate(90deg) scale(1.1);
+  border-color: transparent;
+}
+
+.gallery-content {
+  padding: 2.5rem;
+  overflow-y: auto;
+  /* 自定义画廊内部滚动条 */
+}
+
+.gallery-content::-webkit-scrollbar {
+  width: 6px;
+}
+.gallery-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2rem;
+}
+
+.gallery-item {
+  aspect-ratio: 0.9;
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 4px solid white; /* 拍立得相框感 */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.gallery-item::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--primary-gradient);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.gallery-item:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(79, 70, 229, 0.2);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.gallery-item:hover::after {
+  opacity: 0.1;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s ease;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.1);
+}
+
+/* 灯箱模态框样式 */
+.lightbox-modal {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lightbox-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  animation: zoomIn 0.3s ease-out;
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px; right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  width: 70px;
+  height: 70px;
+}
+
+.lightbox-prev { left: 30px; }
+.lightbox-next { right: 30px; }
+
+.lightbox-info {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  backdrop-filter: blur(4px);
+}
+
+@media (max-width: 768px) {
+  .lightbox-nav {
+    width: 40px;
+    height: 40px;
+  }
+  .lightbox-prev { left: 10px; }
+  .lightbox-next { right: 10px; }
+  .gallery-modal { padding: 1rem; }
+  .gallery-container { max-height: 95vh; }
 }
 </style>

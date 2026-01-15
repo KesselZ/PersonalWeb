@@ -17,12 +17,13 @@
         <TransitionGroup name="list" tag="div" class="portfolio-grid-inner">
           <div v-for="item in filteredItems" :key="item.id" class="portfolio-item">
             <div class="portfolio-image">
-              <!-- 智能图片加载：优先加载缩略图，失败则回退原图 -->
+              <!-- 移除 loading="lazy"：因为资源已经预加载，我们需要立即显示 -->
+              <!-- 添加 decoding="async"：让浏览器在后台解码，避免阻塞主线程，但配合预加载会瞬间完成 -->
               <img 
                 :src="getOptimizedImage(item.image)" 
                 :alt="item.name" 
                 @error="handleImageError($event, item.image)"
-                loading="lazy" 
+                decoding="async"
               />
               <!-- 标签移动到图片右下角 -->
               <span class="portfolio-tag" :class="getTagClass(item.category)">{{ item.category }}</span>
@@ -105,6 +106,7 @@ export default {
         return;
       }
       
+      console.log(`Fallback triggered for: ${originalPath} -> using ${cleanPath}`);
       event.target.src = cleanPath;
     },
     isArt(item) {
@@ -278,13 +280,18 @@ export default {
 .portfolio-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.2); /* 更淡的遮罩 */
+    background: rgba(0, 0, 0, 0.4); /* 稍微加深一点背景，让按钮更明显 */
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition: all 0.4s ease;
+    z-index: 5;
+}
+
+.portfolio-item:hover .portfolio-overlay {
+    opacity: 1;
 }
 
 .portfolio-tag {
