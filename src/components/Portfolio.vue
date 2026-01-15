@@ -89,8 +89,23 @@ export default {
       return `/static/images/thumbnails/${fileName}.webp`;
     },
     handleImageError(event, originalPath) {
-      // 直接使用 originalPath，因为它已经是以 / 开头的完整路径（如 /static/images/...）
-      event.target.src = originalPath;
+      // 极其防御性的处理：确保不出现 //static 这种情况
+      // 如果路径已经是 / 开头，直接用；如果不是，补上 /
+      let fallbackPath = originalPath;
+      if (!fallbackPath.startsWith('/')) {
+        fallbackPath = '/' + fallbackPath;
+      }
+      
+      // 避免重复斜杠并强制指向当前域名的根路径
+      const cleanPath = fallbackPath.replace(/\/+/g, '/');
+      
+      // 如果已经尝试过原图还是失败，就停止防止死循环
+      if (event.target.src.endsWith(cleanPath)) {
+        console.warn('Image failed to load even with fallback:', cleanPath);
+        return;
+      }
+      
+      event.target.src = cleanPath;
     },
     isArt(item) {
       const artLabel = this.currentLang === 'zh' ? '艺术' : 'Art';

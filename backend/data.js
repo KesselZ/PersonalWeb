@@ -92,7 +92,7 @@ const portfolio = [
     id: 1,
     zh: { name: "HTML冒险游戏", description: "JavaScript前端冒险游戏。", category: "网页" },
     en: { name: "HTML Game: Adventure", description: "Front-end adventure game.", category: "Web" },
-    image: "/static/images/front_end/adventure.png",
+    image: "/static/images/captures/adventure.png",
     link: "/static/jump_game/menu.html"
   },
   {
@@ -136,7 +136,7 @@ const portfolio = [
     id: 4,
     zh: { name: "Quick Cash安卓应用", description: "Quick Cash是一款安卓应用程序，用于接受短期工作赚取报酬。", category: "网页" },
     en: { name: "Android App: Quick Cash", description: "Quick Cash is an android application.", category: "Web" },
-    image: "/static/images/app/quickC.png",
+    image: "/static/images/captures/quickC.png",
     github: "https://github.com/KesselZ/Quick_Cash"
   },
   {
