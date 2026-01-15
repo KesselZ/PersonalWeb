@@ -9,8 +9,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // 核心修复：确保 static 目录下的所有资源都被拷贝到部署产物中
-  publicDir: 'static', 
+  // 使用默认的 public 目录，现在 static 文件夹在 public 内部
+  // 这样打包后 dist 目录下会保留 static 文件夹，路径与开发环境一致
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

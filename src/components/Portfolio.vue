@@ -83,13 +83,14 @@ export default {
   },
   methods: {
     getOptimizedImage(originalPath) {
-      // 逻辑：将 static/images/xxx/abc.png 转换为 static/images/thumbnails/abc.webp
+      // 逻辑：由于我们现在将 static 移入了 public 目录
+      // 打包后路径将保留 /static，与开发环境保持一致
       const fileName = originalPath.split('/').pop().split('.')[0];
       return `/static/images/thumbnails/${fileName}.webp`;
     },
     handleImageError(event, originalPath) {
-      // 如果缩略图加载失败（还没生成），回退到原图
-      event.target.src = '/' + originalPath;
+      // 直接使用 originalPath，因为它已经是以 / 开头的完整路径（如 /static/images/...）
+      event.target.src = originalPath;
     },
     isArt(item) {
       const artLabel = this.currentLang === 'zh' ? '艺术' : 'Art';

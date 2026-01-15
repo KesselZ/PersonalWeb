@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use('/static', express.static(path.join(__dirname, '../static')));
+app.use('/static', express.static(path.join(__dirname, '../public/static')));
 
 // 静态文件服务：在生产环境下服务构建好的 Vue 前端
 const distPath = path.join(__dirname, '../dist');
@@ -55,7 +55,7 @@ app.get('/api/image', async (req, res) => {
   const { path: imgPath, w, h } = req.query;
   if (!imgPath) return res.status(400).send('Path is required');
 
-  const absolutePath = path.join(__dirname, '..', imgPath);
+  const absolutePath = path.join(__dirname, '../public', imgPath);
   const dirPath = path.dirname(absolutePath);
 
   // 1. 如果文件不存在，且是 captures 目录，尝试自动抓取

@@ -10,8 +10,8 @@ async function sync() {
     const dataModule = await import('../backend/data.js');
     const data = dataModule;
 
-    const CAPTURES_DIR = path.join(__dirname, '../static/images/captures');
-    const THUMBNAILS_DIR = path.join(__dirname, '../static/images/thumbnails');
+    const CAPTURES_DIR = path.join(__dirname, '../public/static/images/captures');
+    const THUMBNAILS_DIR = path.join(__dirname, '../public/static/images/thumbnails');
 
     // 确保目录存在
     [CAPTURES_DIR, THUMBNAILS_DIR].forEach(dir => {
@@ -26,7 +26,8 @@ async function sync() {
     
     for (const item of allProjects) {
         const itemName = item.en ? item.en.name : item.name;
-        const screenshotPath = path.join(__dirname, '..', item.image);
+        // 修正路径：现在 static 在 public 目录下
+        const screenshotPath = path.join(__dirname, '../public', item.image);
         
         // 1. 自动截图（如果文件不存在且是 captures 目录）
         if (!fs.existsSync(screenshotPath) && item.image.includes('captures/')) {
@@ -69,7 +70,7 @@ async function sync() {
     // 3. 处理绘画作品 (Artworks) 的缩略图
     console.log('🎨 正在同步绘画作品...');
     for (const art of data.artworks) {
-        const artPath = path.join(__dirname, '..', art.src);
+        const artPath = path.join(__dirname, '../public', art.src);
         const thumbName = path.basename(art.src, path.extname(art.src)) + '.webp';
         const thumbPath = path.join(THUMBNAILS_DIR, thumbName);
 
