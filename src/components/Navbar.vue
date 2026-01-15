@@ -94,9 +94,26 @@ export default {
     box-shadow: none;
 }
 
-/* 文字颜色逻辑 */
+.nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.logo-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--primary-gradient);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 .nav-logo h2 {
     color: var(--text-main);
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .nav-menu a {
@@ -229,7 +246,66 @@ export default {
 }
 
 @media (max-width: 768px) {
-    .nav-menu { gap: 1rem; }
-    .nav-menu a { font-size: 0.8rem; }
+    .navbar {
+        top: 10px;
+        height: 56px;
+        width: 98%;
+        border-radius: 16px;
+    }
+
+    .nav-container {
+        padding: 0 1rem;
+    }
+
+    /* 手机端隐藏名字文本，仅保留图标或空白 */
+    .nav-logo h2 {
+        display: none;
+    }
+    
+    .nav-logo {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+
+    .logo-dot {
+        width: 10px; /* 稍微放大圆点，作为一个小 Logo 存在 */
+        height: 10px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        margin-right: 0; /* 名字消失了，不需要右边距 */
+    }
+
+    /* 菜单间距适当回放，因为名字占用的空间释放了 */
+    .nav-menu { 
+        gap: 1.2rem; 
+    }
+    
+    .nav-menu a { 
+        font-size: 0.75rem; 
+    }
+
+    /* 语言切换器紧凑化 */
+    .language-switcher {
+        padding: 2px;
+        border-radius: 10px;
+    }
+
+    .lang-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+
+    /* 左右区域不再占据过大空间 */
+    .nav-logo-wrapper, .nav-lang-wrapper {
+        flex: none;
+    }
+}
+
+/* 针对极窄屏幕（< 380px）的极致压缩 */
+@media (max-width: 380px) {
+    .nav-menu { gap: 0.5rem; }
+    .nav-logo h2 { font-size: 0.85rem; }
+    .nav-container { padding: 0 0.5rem; }
 }
 </style>
