@@ -91,6 +91,8 @@ export default {
       isLoading: true,
       loadingProgress: 0,
       loadingText: '',
+      // 持有预加载的图片对象，防止被垃圾回收
+      preloadedImages: [],
       // 初始化时直接赋值
       personalInfo: { ...siteData.commonInfo, ...siteData.personalInfo, age: siteData.calculateAge() },
       education: siteData.education,
@@ -175,9 +177,9 @@ export default {
       const preloadImage = (url) => {
         return new Promise((resolve) => {
           const img = new Image();
+          this.preloadedImages.push(img); // 存入数组，强制留在内存中
           img.src = url;
           img.onload = () => { 
-            // 核心优化：利用 decode API 确保图片被预先解码到内存中
             if (img.decode) {
               img.decode()
                 .then(() => { tick(); resolve(); })

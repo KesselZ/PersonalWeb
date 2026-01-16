@@ -23,7 +23,7 @@
                 :src="getOptimizedImage(item.image)" 
                 :alt="item.name" 
                 @error="handleImageError($event, item.image)"
-                decoding="async"
+                decoding="sync"
               />
               <!-- 标签移动到图片右下角 -->
               <span class="portfolio-tag" :class="getTagClass(item.category)">{{ item.category }}</span>
@@ -208,31 +208,44 @@ export default {
     position: relative;
 }
 
-/* 列表动画 */
+/* 列表动画升级：确保平滑的 FLIP 效果 */
 .list-enter-active,
 .list-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 核心修复：!important 确保位移动画不被 .portfolio-item 的 transition 覆盖 */
 .list-move {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .list-enter-from {
   opacity: 0;
-  transform: translateY(20px) scale(0.9);
+  transform: translateY(30px) scale(0.9);
 }
 
 .list-leave-to {
   opacity: 0;
-  transform: scale(0.85);
+  transform: scale(0.8);
 }
 
 .list-leave-active {
-  position: absolute;
-  width: calc((100% - 4rem) / 3);
+  position: absolute !important;
   z-index: 0;
   pointer-events: none;
+}
+
+/* 确保在各断点下离开的元素宽度正确，防止由于绝对定位导致的布局坍塌 */
+@media (min-width: 993px) {
+    .list-leave-active { width: calc((100% - 4rem) / 3); }
+}
+
+@media (max-width: 992px) and (min-width: 641px) {
+    .list-leave-active { width: calc((100% - 2rem) / 2); }
+}
+
+@media (max-width: 640px) {
+    .list-leave-active { width: 100%; }
 }
 
 .portfolio-item {
